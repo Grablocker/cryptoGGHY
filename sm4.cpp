@@ -77,44 +77,64 @@ void sm4_key_expansion(const uint8_t *key, uint32_t *rk) {
     }
 }
 
-void sm4_encrypt_block(const uint8_t *plaintext, uint8_t *ciphertext, const uint32_t *rk) {
-    uint32_t X[4];
-    for (int i = 0; i < 4; i++) {
-        X[i] = (plaintext[4 * i] << 24) | (plaintext[4 * i + 1] << 16) | (plaintext[4 * i + 2] << 8) | plaintext[4 * i + 3];
-    }
+void sm4_round(uint32_t *block, const uint32_t *rk) {
     for (int i = 0; i < SM4_ROUND_NUM; i++) {
-        uint32_t tmp = X[0] ^ sm4_t_function(X[1] ^ X[2] ^ X[3] ^ rk[i]);
-        X[0] = X[1];
-        X[1] = X[2];
-        X[2] = X[3];
-        X[3] = tmp;
-    }
-    for (int i = 0; i < 4; i++) {
-        uint32_t output = X[3 - i];
-        ciphertext[4 * i] = (output >> 24) & 0xff;
-        ciphertext[4 * i + 1] = (output >> 16) & 0xff;
-        ciphertext[4 * i + 2] = (output >> 8) & 0xff;
-        ciphertext[4 * i + 3] = output & 0xff;
+        uint32_t temp = block[1] ^ block[2] ^ block[3] ^ rk[i];
+        temp = sm4_t_function(temp);
+        temp = block[0] ^ temp;
+        block[0] = block[1];
+        block[1] = block[2];
+        block[2] = block[3];
+        block[3] = temp;
     }
 }
 
-void sm4_decrypt_block(const uint8_t *ciphertext, uint8_t *plaintext, const uint32_t *rk) {
-    uint32_t X[4];
+void sm4_encrypt_block(const uint8_t *plaintext, uint8_t *ciphertext, const uint8_t *key) {
+    uint32_t block[4], rk[SM4_ROUND_NUM];
+    sm4_key_expansion(key, rk);
+
     for (int i = 0; i < 4; i++) {
-        X[i] = (ciphertext[4 * i] << 24) | (ciphertext[4 * i + 1] << 16) | (ciphertext[4 * i + 2] << 8) | ciphertext[4 * i + 3];
+        block[i] = (plaintext[4 * i] << 24) | (plaintext[4 * i + 1] << 16) | (plaintext[4 * i + 2] << 8) | plaintext[4 * i + 3];
     }
-    for (int i = SM4_ROUND_NUM - 1; i >= 0; i--) {
-        uint32_t tmp = X[0] ^ sm4_t_function(X[1] ^ X[2] ^ X[3] ^ rk[i]);
-        X[0] = X[1];
-        X[1] = X[2];
-        X[2] = X[3];
-        X[3] = tmp;
-    }
+
+    sm4_round(block, rk);
+
     for (int i = 0; i < 4; i++) {
-        uint32_t output = X[3 - i];
-        plaintext[4 * i] = (output >> 24) & 0xff;
-        plaintext[4 * i + 1] = (output >> 16) & 0xff;
-        plaintext[4 * i + 2] = (output >> 8) & 0xff;
-        plaintext[4 * i + 3] = output & 0xff;
+        ciphertext[4 * i] = (block[i] >> 24) & 0xff;
+        ciphertext[4 * i + 1] = (block[i] >> 16) & 0xff;
+        ciphertext[4 * i + 2] = (block[i] >> 8) & 0xff;
+        ciphertext[4 * i + 3] = block[i] & 0xff;
     }
 }
+
+void sm4_decrypt_block(const uint8_t *ciphertext, uint8_t *plaintext, const uint8_t *key) {
+    uint32_t block[4], rk[SM4_ROUND_NUM];
+    sm4_key_expansion(key, rk);
+
+    for (int i = 0; i < 4; i++) {
+        block[i] = (ciphertext[4 * i] << 24) | (ciphertext[4 * i + 1] << 16) | (ciphertext[4 * i + 2] << 8) | ciphertext[4 * i + 3];
+    }
+
+    for (int i = 0; i < SM4_ROUND_NUM / 2; i++) {
+        std::swap(rk[i], rk[SM4_ROUND_NUM - 1 - i]);
+    }
+
+    sm4_round(block, rk);
+
+    for (int i = 0; i < 4; i++) {
+        plaintext[4 * i] = (block[i] >> 24) & 0xff;
+        plaintext[4 * i + 1] = (block[i] >> 16) & 0xff;
+        plaintext[4 * i + 2] = (block[i] >> 8) & 0xff;
+        plaintext[4 * i + 3] = block[i] & 0xff;
+    }
+}
+
+void u8_output(uint8_t* _debug_var, int length){
+
+    for(int i=0; i<length; ++i){
+        printf("%02hhx ", _debug_var[i]);
+    }
+
+    return ;
+}
+
