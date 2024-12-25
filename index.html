@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SM4 Encryption/Decryption</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #e0f7fa;
+        margin: 0;
+      }
+      .container {
+        background-color: #ffffff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 350px;
+      }
+      .container h2 {
+        text-align: center;
+        color: #00796b;
+        margin-bottom: 20px;
+      }
+      .container select,
+      .container textarea,
+      .container button,
+      .container input[type="file"] {
+        width: 100%;
+        margin-bottom: 15px;
+        padding: 10px;
+        border: 1px solid #b0bec5;
+        border-radius: 5px;
+      }
+      .container button {
+        background-color: #00796b;
+        color: #ffffff;
+        border: none;
+        cursor: pointer;
+      }
+      .container button:hover {
+        background-color: #004d40;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>SM4 Encryption/Decryption</h2>
+      <select id="mode">
+        <option value="encrypt">Encrypt</option>
+        <option value="decrypt">Decrypt</option>
+      </select>
+      <select id="operationMode">
+        <option value="ECB">ECB</option>
+        <option value="CBC">CBC</option>
+        <option value="CFB">CFB</option>
+        <option value="OFB">OFB</option>
+      </select>
+      <select id="paddingMode">
+        <option value="PKCS5Padding">PKCS5Padding</option>
+        <option value="NoPadding">NoPadding</option>
+      </select>
+      <select id="keyLength">
+        <option value="128">128 bits</option>
+        <option value="192">192 bits</option>
+        <option value="256">256 bits</option>
+      </select>
+      <textarea id="input" rows="4" placeholder="Enter text here..."></textarea>
+      <input type="file" id="fileInput" onchange="toggleInput()" />
+      <textarea
+        id="output"
+        rows="4"
+        placeholder="Output will appear here..."
+        readonly
+      ></textarea>
+      <button onclick="process()">Process</button>
+    </div>
+
+    <script>
+      const { ipcRenderer } = window.electron;
+
+      function toggleInput() {
+        const fileInput = document.getElementById("fileInput").files[0];
+        const input = document.getElementById("input");
+        if (fileInput) {
+          input.style.display = "none";
+        } else {
+          input.style.display = "block";
+        }
+      }
+
+      function process() {
+        const mode = document.getElementById("mode").value;
+        const operationMode = document.getElementById("operationMode").value;
+        const paddingMode = document.getElementById("paddingMode").value;
+        const keyLength = document.getElementById("keyLength").value;
+        const input = document.getElementById("input").value;
+        const fileInput = document.getElementById("fileInput").files[0];
+        const output = document.getElementById("output");
+
+        if (fileInput) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const fileContent = e.target.result;
+            ipcRenderer.send(
+              "process-encryption",
+              mode,
+              fileContent,
+              operationMode,
+              paddingMode,
+              keyLength
+            );
+          };
+          reader.readAsText(fileInput);
+        } else {
+          ipcRenderer.send(
+            "process-encryption",
+            mode,
+            input,
+            operationMode,
+            paddingMode,
+            keyLength
+          );
+        }
+
+        ipcRenderer.on("process-result", (event, result) => {
+          output.value = result;
+        });
+      }
+    </script>
+  </body>
+</html>
