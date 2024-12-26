@@ -6,6 +6,8 @@
 #define SM4_BLOCK_SIZE 16  // 数据块大小 16字节
 #define SM4_KEY_SIZE 16    // 密钥大小 16字节
 #define SM4_ROUND_NUM 32   // 轮数 32
+#define _READ8 u8_output
+#define _READ32 u32_output
 
 // SM4 S-box
 static const uint8_t SBOX[256] = {
@@ -39,6 +41,19 @@ static const uint32_t CK[32] = {
     0x10171e25, 0x2c333a41, 0x484f565d, 0x646b7279
 };
 
+//----------------- Execute function ------------------
+void sm4_key_expansion(const uint8_t *key, uint32_t *rk);
+void sm4_round(uint32_t *block, const uint32_t *rk);
+void sm4_encrypt_block(const uint8_t *plaintext, uint8_t *ciphertext, const uint8_t *key);
+void sm4_decrypt_block(const uint8_t *ciphertext, uint8_t *plaintext, const uint8_t *key);
+uint32_t sm4_t_function(uint32_t input);
+uint32_t sm4_sbox_substitution(uint32_t input);
+
+//----------------- Debug function -------------------
+void u8_output(uint8_t* _debug_var, int length);
+void u32_output(uint32_t* _debug_var, int length);
+
+
 uint32_t sm4_sbox_substitution(uint32_t input) {
     uint8_t a[4];
     a[0] = (input >> 24) & 0xff;
@@ -54,26 +69,30 @@ uint32_t sm4_sbox_substitution(uint32_t input) {
     return (a[0] << 24) | (a[1] << 16) | (a[2] << 8) | a[3];
 }
 
-uint32_t sm4_linear_transformation(uint32_t input) {
+uint32_t sm4_t_function(uint32_t input) {
     return input ^ (input << 2 | input >> 30) ^ (input << 10 | input >> 22) ^ (input << 18 | input >> 14) ^ (input << 24 | input >> 8);
 }
 
-uint32_t sm4_t_function(uint32_t input) {
-    return sm4_linear_transformation(sm4_sbox_substitution(input));
+uint32_t sm4_l_function(uint32_t input){
+    return input ^ (input<<13|input>>19) ^ (input<<23|input>>9);
 }
 
+// check safe
 void sm4_key_expansion(const uint8_t *key, uint32_t *rk) {
-    uint32_t MK[4], K[4];
+    uint32_t MK[4], K[36];
+
     for (int i = 0; i < 4; i++) {
         MK[i] = (key[4 * i] << 24) | (key[4 * i + 1] << 16) | (key[4 * i + 2] << 8) | key[4 * i + 3];
         K[i] = MK[i] ^ FK[i];
     }
+    
     for (int i = 0; i < SM4_ROUND_NUM; i++) {
-        rk[i] = K[0] ^ sm4_t_function(K[1] ^ K[2] ^ K[3] ^ CK[i]);
-        K[0] = K[1];
-        K[1] = K[2];
-        K[2] = K[3];
-        K[3] = rk[i];
+        
+        uint32_t temp=K[i+1] ^ K[i+2] ^ K[i+3] ^ CK[i];
+        temp= sm4_sbox_substitution(temp);
+        K[i+4] = K[i] ^ sm4_l_function(temp);
+        rk[i]=K[i+4];
+        
     }
 }
 
@@ -92,6 +111,8 @@ void sm4_round(uint32_t *block, const uint32_t *rk) {
 void sm4_encrypt_block(const uint8_t *plaintext, uint8_t *ciphertext, const uint8_t *key) {
     uint32_t block[4], rk[SM4_ROUND_NUM];
     sm4_key_expansion(key, rk);
+
+    _READ32(rk, SM4_ROUND_NUM);
 
     for (int i = 0; i < 4; i++) {
         block[i] = (plaintext[4 * i] << 24) | (plaintext[4 * i + 1] << 16) | (plaintext[4 * i + 2] << 8) | plaintext[4 * i + 3];
@@ -133,6 +154,18 @@ void u8_output(uint8_t* _debug_var, int length){
 
     for(int i=0; i<length; ++i){
         printf("%02hhx ", _debug_var[i]);
+    }
+
+    return ;
+}
+
+void u32_output(uint32_t* _debug_var, int length){
+
+    for(int i=0; i<length; ++i){
+        printf("%08x ", _debug_var[i]);
+        if((i+1)%8==0){
+            printf("\n");
+        }
     }
 
     return ;
