@@ -7,7 +7,7 @@ void Xor(uint32_t* a, uint32_t* b, uint32_t* result) {
     }
 }
 
-// ECBģʽ����
+// ECB模式加密
 void ECB_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, int numBlocks) {
     for (int i = 0; i < numBlocks; i++) {
         sm4_encrypt_block(plaintext[i], ciphertext[i], key);
@@ -40,9 +40,9 @@ void PCBC_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_
     }
 }
 
-//PCBCģʽ����
+//PCBC模式解密
 void PCBC_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t* key, uint32_t* iv, int numBlocks) {
-    uint32_t preMidXor[BLOCK_SIZE];  // ǰһ�����������������Ľ��
+    uint32_t preMidXor[BLOCK_SIZE];  // 前一个密文与其明文异或的结果
 
     sm4_decrypt_block(ciphertext[0], plaintext[0], key);
     Xor(plaintext[0], iv, plaintext[0]);
@@ -55,7 +55,7 @@ void PCBC_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_
     }
 }
 
-// CBCģʽ����
+// CBC模式加密
 void CBC_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint32_t* iv, int numBlocks) {
     Xor(plaintext[0], iv, plaintext[0]);
     sm4_encrypt_block(plaintext[0], ciphertext[0], key);
@@ -66,7 +66,7 @@ void CBC_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_S
     }
 }
 
-// CBCģʽ����
+// CBC模式解密
 void CBC_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t* key, uint32_t* iv, int numBlocks) {
     sm4_decrypt_block(ciphertext[0], plaintext[0], key);
     Xor(plaintext[0], iv, plaintext[0]);
@@ -78,7 +78,7 @@ void CBC_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_S
 }
 
 
-//�������ģʽOFB
+//输出反馈模式OFB
 void OFB_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint32_t* R0, int s, int numBlocks)
 {
     uint32_t reg[BLOCK_SIZE];
@@ -98,7 +98,7 @@ void OFB_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_S
             }
 
             memmove(reg, reg + num, BLOCK_SIZE - num);
-            // ��s_cipher�����е����ݸ��Ƶ�reg�����ǰsλ
+            // 将s_cipher数组中的内容复制到reg数组的前s位
             memcpy(reg + BLOCK_SIZE - num, s_cipher, num);
         }
     }
@@ -123,13 +123,13 @@ void OFB_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_S
             }
 
             memmove(reg, reg + num, BLOCK_SIZE - num);
-            // ��s_plain�����е����ݸ��Ƶ�reg�����ǰsλ
+            // 将s_plain数组中的内容复制到reg数组的前s位
             memcpy(reg + BLOCK_SIZE - num, s_plain, num);
         }
     }
 }
 
-//���ķ���ģʽCFB
+//密文反馈模式CFB
 void CFB_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint32_t* R0, int s, int numBlocks)
 {
     uint32_t reg[BLOCK_SIZE];
@@ -190,7 +190,7 @@ void generate_random_sequence(uint32_t T[][BLOCK_SIZE], int n) {
     }
 }
 
-//������ģʽ
+//计数器模式
 void CTR_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint32_t T[][BLOCK_SIZE], int numBlocks, int last_block_size)
 {
     uint32_t output[BLOCK_SIZE];
