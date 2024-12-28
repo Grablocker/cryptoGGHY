@@ -2,36 +2,36 @@
 #include<string.h>
 #include <time.h>
 
-#define BLOCK_SIZE 16  //每个分组块16个字节
+#define BLOCK_SIZE 4  //每个分组块4个字
 #define ROUNDS 10
 
-void encrypt_mode(const uint8_t* plaintext, uint8_t* ciphertext, const uint8_t* key, int rounds)
+void encrypt_mode(const uint32_t* plaintext, uint32_t* ciphertext, const uint8_t* key, int rounds)
 {
     sm4_encrypt_block(plaintext, ciphertext, key);
 }
 
-void decrypt_mode(const uint8_t* ciphertext, uint8_t* plaintext, const uint8_t* key, int rounds)
+void decrypt_mode(const uint32_t* ciphertext, uint32_t* plaintext, const uint8_t* key, int rounds)
 {
     sm4_decrypt_block(ciphertext, plaintext, key);
 }
 
 //---------------------------------------以上定义加解密所用分组密码---------------------------------------------------------------
 
-void Xor(uint8_t* a, uint8_t* b, uint8_t* result) {
+void Xor(uint32_t* a, uint32_t* b, uint32_t* result) {
     for (int i = 0; i < BLOCK_SIZE; i++) {
         result[i] = a[i] ^ b[i];
     }
 }
 
 // ECB模式加密
-void ECB_encrypt(uint8_t plaintext[][BLOCK_SIZE], uint8_t ciphertext[][BLOCK_SIZE], uint8_t* key, int numBlocks) {
+void ECB_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, int numBlocks) {
     for (int i = 0; i < numBlocks; i++) {
         encrypt_mode(plaintext[i], ciphertext[i], key, ROUNDS);
     }
 }
 
 // ECB模式解密
-void ECB_decrypt(uint8_t ciphertext[][BLOCK_SIZE], uint8_t plaintext[][BLOCK_SIZE], uint8_t* key, int numBlocks) {
+void ECB_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t* key, int numBlocks) {
     for (int i = 0; i < numBlocks; i++) {
         // 由于是ECB模式，加密和解密过程相同，直接调用AES函数即可
         decrypt_mode(ciphertext[i], plaintext[i], key, ROUNDS);
@@ -39,9 +39,9 @@ void ECB_decrypt(uint8_t ciphertext[][BLOCK_SIZE], uint8_t plaintext[][BLOCK_SIZ
 }
 
 // PCBC模式加密
-void PCBC_encrypt(uint8_t plaintext[][BLOCK_SIZE], uint8_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint8_t* iv, int numBlocks) {
-    uint8_t preMidXor[BLOCK_SIZE];  // 前一个明文与其密文异或的结果
-    uint8_t temp[BLOCK_SIZE];  //临时存储明文
+void PCBC_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint32_t* iv, int numBlocks) {
+    uint32_t preMidXor[BLOCK_SIZE];  // 前一个明文与其密文异或的结果
+    uint32_t temp[BLOCK_SIZE];  //临时存储明文
 
     memcpy(temp, plaintext[0], BLOCK_SIZE);
     Xor(temp, iv, temp);
@@ -57,8 +57,8 @@ void PCBC_encrypt(uint8_t plaintext[][BLOCK_SIZE], uint8_t ciphertext[][BLOCK_SI
 }
 
 //PCBC模式解密
-void PCBC_decrypt(uint8_t ciphertext[][BLOCK_SIZE], uint8_t plaintext[][BLOCK_SIZE], uint8_t* key, uint8_t* iv, int numBlocks) {
-    uint8_t preMidXor[BLOCK_SIZE];  // 前一个密文与其明文异或的结果
+void PCBC_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t* key, uint32_t* iv, int numBlocks) {
+    uint32_t preMidXor[BLOCK_SIZE];  // 前一个密文与其明文异或的结果
 
     decrypt_mode(ciphertext[0], plaintext[0], key, ROUNDS);
     Xor(plaintext[0], iv, plaintext[0]);
@@ -72,7 +72,7 @@ void PCBC_decrypt(uint8_t ciphertext[][BLOCK_SIZE], uint8_t plaintext[][BLOCK_SI
 }
 
 // CBC模式加密
-void CBC_encrypt(uint8_t plaintext[][BLOCK_SIZE], uint8_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint8_t* iv, int numBlocks) {
+void CBC_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint32_t* iv, int numBlocks) {
     Xor(plaintext[0], iv, plaintext[0]);
     encrypt_mode(plaintext[0], ciphertext[0], key, ROUNDS);
 
@@ -83,7 +83,7 @@ void CBC_encrypt(uint8_t plaintext[][BLOCK_SIZE], uint8_t ciphertext[][BLOCK_SIZ
 }
 
 // CBC模式解密
-void CBC_decrypt(uint8_t ciphertext[][BLOCK_SIZE], uint8_t plaintext[][BLOCK_SIZE], uint8_t* key, uint8_t* iv, int numBlocks) {
+void CBC_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t* key, uint32_t* iv, int numBlocks) {
     decrypt_mode(ciphertext[0], plaintext[0], key, ROUNDS);
     Xor(plaintext[0], iv, plaintext[0]);
 
@@ -95,12 +95,12 @@ void CBC_decrypt(uint8_t ciphertext[][BLOCK_SIZE], uint8_t plaintext[][BLOCK_SIZ
 
 
 //输出反馈模式OFB
-void OFB_encrypt(uint8_t plaintext[][BLOCK_SIZE], uint8_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint8_t* R0, int s, int numBlocks)
+void OFB_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint32_t* R0, int s, int numBlocks)
 {
-    uint8_t reg[BLOCK_SIZE];
-    uint8_t mid_cipher[BLOCK_SIZE];
+    uint32_t reg[BLOCK_SIZE];
+    uint32_t mid_cipher[BLOCK_SIZE];
     int num = s / 8;
-    uint8_t s_cipher[BLOCK_SIZE];
+    uint32_t s_cipher[BLOCK_SIZE];
     memcpy(reg, R0, BLOCK_SIZE);
     for (int i = 0; i < numBlocks; i++)
     {
@@ -120,12 +120,12 @@ void OFB_encrypt(uint8_t plaintext[][BLOCK_SIZE], uint8_t ciphertext[][BLOCK_SIZ
     }
 }
 
-void OFB_decrypt(uint8_t ciphertext[][BLOCK_SIZE], uint8_t plaintext[][BLOCK_SIZE], uint8_t* key, uint8_t* R0, int s, int numBlocks)
+void OFB_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t* key, uint32_t* R0, int s, int numBlocks)
 {
-    uint8_t reg[BLOCK_SIZE];
-    uint8_t mid_plain[BLOCK_SIZE];
+    uint32_t reg[BLOCK_SIZE];
+    uint32_t mid_plain[BLOCK_SIZE];
     int num = s / 8;
-    uint8_t s_plain[BLOCK_SIZE];
+    uint32_t s_plain[BLOCK_SIZE];
     memcpy(reg, R0, BLOCK_SIZE);
     for (int i = 0; i < numBlocks; i++)
     {
@@ -146,12 +146,12 @@ void OFB_decrypt(uint8_t ciphertext[][BLOCK_SIZE], uint8_t plaintext[][BLOCK_SIZ
 }
 
 //密文反馈模式CFB
-void CFB_encrypt(uint8_t plaintext[][BLOCK_SIZE], uint8_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint8_t* R0, int s, int numBlocks)
+void CFB_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint32_t* R0, int s, int numBlocks)
 {
-    uint8_t reg[BLOCK_SIZE];
-    uint8_t mid_cipher[BLOCK_SIZE];
+    uint32_t reg[BLOCK_SIZE];
+    uint32_t mid_cipher[BLOCK_SIZE];
     int num = s / 8;
-    uint8_t s_cipher1[BLOCK_SIZE], s_cipher2[BLOCK_SIZE];
+    uint32_t s_cipher1[BLOCK_SIZE], s_cipher2[BLOCK_SIZE];
     memcpy(reg, R0, BLOCK_SIZE);
     for (int i = 0; i < numBlocks; i++)
     {
@@ -171,12 +171,12 @@ void CFB_encrypt(uint8_t plaintext[][BLOCK_SIZE], uint8_t ciphertext[][BLOCK_SIZ
     }
 }
 
-void CFB_decrypt(uint8_t ciphertext[][BLOCK_SIZE], uint8_t plaintext[][BLOCK_SIZE], uint8_t* key, uint8_t* R0, int s, int numBlocks)
+void CFB_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t* key, uint32_t* R0, int s, int numBlocks)
 {
-    uint8_t reg[BLOCK_SIZE];
-    uint8_t mid_plain[BLOCK_SIZE];
+    uint32_t reg[BLOCK_SIZE];
+    uint32_t mid_plain[BLOCK_SIZE];
     int num = s / 8;
-    uint8_t s_plain[BLOCK_SIZE], feedback[BLOCK_SIZE];
+    uint32_t s_plain[BLOCK_SIZE], feedback[BLOCK_SIZE];
     memcpy(reg, R0, BLOCK_SIZE);
     for (int i = 0; i < numBlocks; i++)
     {
@@ -196,16 +196,16 @@ void CFB_decrypt(uint8_t ciphertext[][BLOCK_SIZE], uint8_t plaintext[][BLOCK_SIZ
     }
 }
 
-void Pad(uint8_t* block, int size) {
+void Pad(uint32_t* block, int size) {
     int padding = BLOCK_SIZE - size;
     memset(block + size, 0, padding); // 填充0
     block[size] = 0x80; // 根据PKCS#5/PKCS#7标准，填充的第一个字节为0x80
 }
 
 
-void X_CBC_encrypt(uint8_t plaintext[][BLOCK_SIZE], uint8_t ciphertext[][BLOCK_SIZE], uint8_t key[3][BLOCK_SIZE], int numBlocks, int last_block_size)
+void X_CBC_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t key[3][BLOCK_SIZE], int numBlocks, int last_block_size)
 {
-    uint8_t Z[BLOCK_SIZE] = { 0 };
+    uint32_t Z[BLOCK_SIZE] = { 0 };
     Xor(plaintext[0], Z, plaintext[0]);
     encrypt_mode(plaintext[0], ciphertext[0], key[0], ROUNDS);
 
@@ -234,14 +234,14 @@ void X_CBC_encrypt(uint8_t plaintext[][BLOCK_SIZE], uint8_t ciphertext[][BLOCK_S
     }
 }
 
-void Unpad(uint8_t* block, int size) {
+void Unpad(uint32_t* block, int size) {
     int paddingLength = BLOCK_SIZE - size; // 计算填充的长度
     memset(block + size, 0, paddingLength); // 将填充的部分置为0
 }
 
-void X_CBC_decrypt(uint8_t ciphertext[][BLOCK_SIZE], uint8_t plaintext[][BLOCK_SIZE], uint8_t key[3][BLOCK_SIZE], int numBlocks, int last_block_size)
+void X_CBC_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint32_t key[3][BLOCK_SIZE], int numBlocks, int last_block_size)
 {
-    uint8_t Z[BLOCK_SIZE] = { 0 };
+    uint32_t Z[BLOCK_SIZE] = { 0 };
     decrypt_mode(ciphertext[0], plaintext[0], key[0], ROUNDS);
     Xor(plaintext[0], Z, plaintext[0]);
 
@@ -271,19 +271,19 @@ void X_CBC_decrypt(uint8_t ciphertext[][BLOCK_SIZE], uint8_t plaintext[][BLOCK_S
 }
 
 // 生成随机序列并存储在数组T中
-void generate_random_sequence(uint8_t T[][BLOCK_SIZE], int n) {
+void generate_random_sequence(uint32_t T[][BLOCK_SIZE], int n) {
     srand(time(NULL)); // 使用当前时间作为种子
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < BLOCK_SIZE; j++) {
-            T[i][j] = (uint8_t)(rand() % 256); // 生成0到255之间的随机数
+            T[i][j] = (uint32_t)(rand() % 256); // 生成0到255之间的随机数
         }
     }
 }
 
 //计数器模式
-void CTR_encrypt(uint8_t plaintext[][BLOCK_SIZE], uint8_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint8_t T[][BLOCK_SIZE], int numBlocks, int last_block_size)
+void CTR_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint32_t T[][BLOCK_SIZE], int numBlocks, int last_block_size)
 {
-    uint8_t output[BLOCK_SIZE];
+    uint32_t output[BLOCK_SIZE];
     for (int i = 0; i < numBlocks; i++)
     {
         encrypt_mode(T[i], output, key, ROUNDS);
@@ -301,9 +301,9 @@ void CTR_encrypt(uint8_t plaintext[][BLOCK_SIZE], uint8_t ciphertext[][BLOCK_SIZ
     }
 }
 
-void CTR_decrypt(uint8_t ciphertext[][BLOCK_SIZE], uint8_t plaintext[][BLOCK_SIZE], uint8_t* key, uint8_t T[][BLOCK_SIZE], int numBlocks, int last_block_size)
+void CTR_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t* key, uint32_t T[][BLOCK_SIZE], int numBlocks, int last_block_size)
 {
-    uint8_t output[BLOCK_SIZE];
+    uint32_t output[BLOCK_SIZE];
     for (int i = 0; i < numBlocks; i++)
     {
         encrypt_mode(T[i], output, key, ROUNDS);
