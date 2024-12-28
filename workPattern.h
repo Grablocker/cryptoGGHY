@@ -203,7 +203,7 @@ void Pad(uint32_t* block, int size) {
 }
 
 
-void X_CBC_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t key[3][BLOCK_SIZE], int numBlocks, int last_block_size)
+void X_CBC_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t key[3][16], int numBlocks, int last_block_size)
 {
     uint32_t Z[BLOCK_SIZE] = { 0 };
     Xor(plaintext[0], Z, plaintext[0]);
@@ -239,7 +239,7 @@ void Unpad(uint32_t* block, int size) {
     memset(block + size, 0, paddingLength); // 将填充的部分置为0
 }
 
-void X_CBC_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t key[3][BLOCK_SIZE], int numBlocks, int last_block_size)
+void X_CBC_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t key[3][16], int numBlocks, int last_block_size)
 {
     uint32_t Z[BLOCK_SIZE] = { 0 };
     decrypt_mode(ciphertext[0], plaintext[0], key[0], ROUNDS);
