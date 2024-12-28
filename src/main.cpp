@@ -9,7 +9,7 @@ int main(){
     uint32_t ciphertext[16];
     sm4_encrypt_block(plaintext, ciphertext, key);
 
-    u32_output(plaintext, 4);
+    u32_output(ciphertext, 4);
     //*/
 
     /* Decrypt

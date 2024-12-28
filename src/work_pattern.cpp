@@ -1,21 +1,5 @@
-#include "main.h"
-#include<string.h>
-#include <time.h>
+#include "./workPattern.h"
 
-#define BLOCK_SIZE 4  //Ã¿¸ö·Ö×é¿é4¸ö×Ö
-#define ROUNDS 10
-
-void encrypt_mode(const uint32_t* plaintext, uint32_t* ciphertext, const uint8_t* key, int rounds)
-{
-    sm4_encrypt_block(plaintext, ciphertext, key);
-}
-
-void decrypt_mode(const uint32_t* ciphertext, uint32_t* plaintext, const uint8_t* key, int rounds)
-{
-    sm4_decrypt_block(ciphertext, plaintext, key);
-}
-
-//---------------------------------------ÒÔÉÏ¶¨Òå¼Ó½âÃÜËùÓÃ·Ö×éÃÜÂë---------------------------------------------------------------
 
 void Xor(uint32_t* a, uint32_t* b, uint32_t* result) {
     for (int i = 0; i < BLOCK_SIZE; i++) {
@@ -23,78 +7,78 @@ void Xor(uint32_t* a, uint32_t* b, uint32_t* result) {
     }
 }
 
-// ECBÄ£Ê½¼ÓÃÜ
+// ECBÄ£Ê½ï¿½ï¿½ï¿½ï¿½
 void ECB_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, int numBlocks) {
     for (int i = 0; i < numBlocks; i++) {
-        encrypt_mode(plaintext[i], ciphertext[i], key, ROUNDS);
+        sm4_encrypt_block(plaintext[i], ciphertext[i], key);
     }
 }
 
-// ECBÄ£Ê½½âÃÜ
+// ECBÄ£Ê½ï¿½ï¿½ï¿½ï¿½
 void ECB_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t* key, int numBlocks) {
     for (int i = 0; i < numBlocks; i++) {
-        // ÓÉÓÚÊÇECBÄ£Ê½£¬¼ÓÃÜºÍ½âÃÜ¹ı³ÌÏàÍ¬£¬Ö±½Óµ÷ÓÃAESº¯Êı¼´¿É
-        decrypt_mode(ciphertext[i], plaintext[i], key, ROUNDS);
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ECBÄ£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ÜºÍ½ï¿½ï¿½Ü¹ï¿½ï¿½ï¿½ï¿½ï¿½Í¬ï¿½ï¿½Ö±ï¿½Óµï¿½ï¿½ï¿½AESï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        sm4_decrypt_block(ciphertext[i], plaintext[i], key);
     }
 }
 
-// PCBCÄ£Ê½¼ÓÃÜ
+// PCBCÄ£Ê½ï¿½ï¿½ï¿½ï¿½
 void PCBC_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint32_t* iv, int numBlocks) {
-    uint32_t preMidXor[BLOCK_SIZE];  // Ç°Ò»¸öÃ÷ÎÄÓëÆäÃÜÎÄÒì»òµÄ½á¹û
-    uint32_t temp[BLOCK_SIZE];  //ÁÙÊ±´æ´¢Ã÷ÎÄ
+    uint32_t preMidXor[BLOCK_SIZE];  // Ç°Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä½ï¿½ï¿½
+    uint32_t temp[BLOCK_SIZE];  //ï¿½ï¿½Ê±ï¿½æ´¢ï¿½ï¿½ï¿½ï¿½
 
     memcpy(temp, plaintext[0], BLOCK_SIZE);
     Xor(temp, iv, temp);
-    encrypt_mode(temp, ciphertext[0], key, ROUNDS);
+    sm4_encrypt_block(temp, ciphertext[0], key);
     Xor(plaintext[0], ciphertext[0], preMidXor);
 
     for (int i = 1; i < numBlocks; i++) {
         memcpy(temp, plaintext[i], BLOCK_SIZE);
         Xor(temp, preMidXor, temp);
-        encrypt_mode(temp, ciphertext[i], key, ROUNDS);
+        sm4_encrypt_block(temp, ciphertext[i], key);
         Xor(plaintext[i], ciphertext[i], preMidXor);
     }
 }
 
-//PCBCÄ£Ê½½âÃÜ
+//PCBCÄ£Ê½ï¿½ï¿½ï¿½ï¿½
 void PCBC_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t* key, uint32_t* iv, int numBlocks) {
-    uint32_t preMidXor[BLOCK_SIZE];  // Ç°Ò»¸öÃÜÎÄÓëÆäÃ÷ÎÄÒì»òµÄ½á¹û
+    uint32_t preMidXor[BLOCK_SIZE];  // Ç°Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä½ï¿½ï¿½
 
-    decrypt_mode(ciphertext[0], plaintext[0], key, ROUNDS);
+    sm4_decrypt_block(ciphertext[0], plaintext[0], key);
     Xor(plaintext[0], iv, plaintext[0]);
     Xor(plaintext[0], ciphertext[0], preMidXor);
 
     for (int i = 1; i < numBlocks; i++) {
-        decrypt_mode(ciphertext[i], plaintext[i], key, ROUNDS);
+        sm4_decrypt_block(ciphertext[i], plaintext[i], key);
         Xor(plaintext[i], preMidXor, plaintext[i]);
         Xor(plaintext[i], ciphertext[i], preMidXor);
     }
 }
 
-// CBCÄ£Ê½¼ÓÃÜ
+// CBCÄ£Ê½ï¿½ï¿½ï¿½ï¿½
 void CBC_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint32_t* iv, int numBlocks) {
     Xor(plaintext[0], iv, plaintext[0]);
-    encrypt_mode(plaintext[0], ciphertext[0], key, ROUNDS);
+    sm4_encrypt_block(plaintext[0], ciphertext[0], key);
 
     for (int i = 1; i < numBlocks; i++) {
         Xor(plaintext[i], ciphertext[i - 1], plaintext[i]);
-        encrypt_mode(plaintext[i], ciphertext[i], key, ROUNDS);
+        sm4_encrypt_block(plaintext[i], ciphertext[i], key);
     }
 }
 
-// CBCÄ£Ê½½âÃÜ
+// CBCÄ£Ê½ï¿½ï¿½ï¿½ï¿½
 void CBC_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t* key, uint32_t* iv, int numBlocks) {
-    decrypt_mode(ciphertext[0], plaintext[0], key, ROUNDS);
+    sm4_decrypt_block(ciphertext[0], plaintext[0], key);
     Xor(plaintext[0], iv, plaintext[0]);
 
     for (int i = 1; i < numBlocks; i++) {
-        decrypt_mode(ciphertext[i], plaintext[i], key, ROUNDS);
+        sm4_decrypt_block(ciphertext[i], plaintext[i], key);
         Xor(plaintext[i], ciphertext[i - 1], plaintext[i]);
     }
 }
 
 
-//Êä³ö·´À¡Ä£Ê½OFB
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½OFB
 void OFB_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint32_t* R0, int s, int numBlocks)
 {
     uint32_t reg[BLOCK_SIZE];
@@ -106,7 +90,7 @@ void OFB_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_S
     {
         for (int j = 0; j < (BLOCK_SIZE / num); j++)
         {
-            encrypt_mode(reg, mid_cipher, key, ROUNDS);
+            sm4_encrypt_block(reg, mid_cipher, key);
             memcpy(s_cipher, mid_cipher + BLOCK_SIZE - num, num);
             for (int k = 0; k < num; k++)
             {
@@ -114,7 +98,7 @@ void OFB_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_S
             }
 
             memmove(reg, reg + num, BLOCK_SIZE - num);
-            // ½«s_cipherÊı×éÖĞµÄÄÚÈİ¸´ÖÆµ½regÊı×éµÄÇ°sÎ»
+            // ï¿½ï¿½s_cipherï¿½ï¿½ï¿½ï¿½ï¿½Ğµï¿½ï¿½ï¿½ï¿½İ¸ï¿½ï¿½Æµï¿½regï¿½ï¿½ï¿½ï¿½ï¿½Ç°sÎ»
             memcpy(reg + BLOCK_SIZE - num, s_cipher, num);
         }
     }
@@ -131,7 +115,7 @@ void OFB_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_S
     {
         for (int j = 0; j < (BLOCK_SIZE / num); j++)
         {
-            encrypt_mode(reg, mid_plain, key, ROUNDS);
+            sm4_encrypt_block(reg, mid_plain, key);
             memcpy(s_plain, mid_plain + BLOCK_SIZE - num, num);
             for (int k = 0; k < num; k++)
             {
@@ -139,13 +123,13 @@ void OFB_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_S
             }
 
             memmove(reg, reg + num, BLOCK_SIZE - num);
-            // ½«s_plainÊı×éÖĞµÄÄÚÈİ¸´ÖÆµ½regÊı×éµÄÇ°sÎ»
+            // ï¿½ï¿½s_plainï¿½ï¿½ï¿½ï¿½ï¿½Ğµï¿½ï¿½ï¿½ï¿½İ¸ï¿½ï¿½Æµï¿½regï¿½ï¿½ï¿½ï¿½ï¿½Ç°sÎ»
             memcpy(reg + BLOCK_SIZE - num, s_plain, num);
         }
     }
 }
 
-//ÃÜÎÄ·´À¡Ä£Ê½CFB
+//ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½Ä£Ê½CFB
 void CFB_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint32_t* R0, int s, int numBlocks)
 {
     uint32_t reg[BLOCK_SIZE];
@@ -157,7 +141,7 @@ void CFB_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_S
     {
         for (int j = 0; j < (BLOCK_SIZE / num); j++)
         {
-            encrypt_mode(reg, mid_cipher, key, ROUNDS);
+            sm4_encrypt_block(reg, mid_cipher, key);
             memcpy(s_cipher1, mid_cipher + BLOCK_SIZE - num, num);
             for (int k = 0; k < num; k++)
             {
@@ -182,7 +166,7 @@ void CFB_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_S
     {
         for (int j = 0; j < (BLOCK_SIZE / num); j++)
         {
-            encrypt_mode(reg, mid_plain, key, ROUNDS);
+            sm4_encrypt_block(reg, mid_plain, key);
             memcpy(s_plain, mid_plain + BLOCK_SIZE - num, num);
             memcpy(feedback, ciphertext[i] + j * num, num);
             for (int k = 0; k < num; k++)
@@ -196,97 +180,23 @@ void CFB_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_S
     }
 }
 
-void Pad(uint32_t* block, int size) {
-    int padding = BLOCK_SIZE - size;
-    memset(block + size, 0, padding); // Ìî³ä0
-    block[size] = 0x80; // ¸ù¾İPKCS#5/PKCS#7±ê×¼£¬Ìî³äµÄµÚÒ»¸ö×Ö½ÚÎª0x80
-}
-
-
-void X_CBC_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t key[3][BLOCK_SIZE], int numBlocks, int last_block_size)
-{
-    uint32_t Z[BLOCK_SIZE] = { 0 };
-    Xor(plaintext[0], Z, plaintext[0]);
-    encrypt_mode(plaintext[0], ciphertext[0], key[0], ROUNDS);
-
-    for (int i = 1; i < numBlocks; i++) {
-        if (i < numBlocks - 1)
-        {
-            Xor(plaintext[i], ciphertext[i - 1], plaintext[i]);
-            encrypt_mode(plaintext[i], ciphertext[i], key[0], ROUNDS);
-        }
-        else
-        {
-            if (last_block_size < BLOCK_SIZE)
-            {
-                Pad(plaintext[i], last_block_size);  // ¶Ô×îºóÒ»¸ö¿é½øĞĞÌî³ä
-                Xor(plaintext[i], ciphertext[i - 1], plaintext[i]);
-                Xor(plaintext[i], key[2], plaintext[i]);
-                encrypt_mode(plaintext[i], ciphertext[i], key[0], ROUNDS);
-            }
-            else
-            {
-                Xor(plaintext[i], ciphertext[i - 1], plaintext[i]);
-                Xor(plaintext[i], key[1], plaintext[i]);
-                encrypt_mode(plaintext[i], ciphertext[i], key[0], ROUNDS);
-            }
-        }
-    }
-}
-
-void Unpad(uint32_t* block, int size) {
-    int paddingLength = BLOCK_SIZE - size; // ¼ÆËãÌî³äµÄ³¤¶È
-    memset(block + size, 0, paddingLength); // ½«Ìî³äµÄ²¿·ÖÖÃÎª0
-}
-
-void X_CBC_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint32_t key[3][BLOCK_SIZE], int numBlocks, int last_block_size)
-{
-    uint32_t Z[BLOCK_SIZE] = { 0 };
-    decrypt_mode(ciphertext[0], plaintext[0], key[0], ROUNDS);
-    Xor(plaintext[0], Z, plaintext[0]);
-
-    for (int i = 1; i < numBlocks; i++) {
-        if (i < numBlocks - 1)
-        {
-            decrypt_mode(ciphertext[i], plaintext[i], key[0], ROUNDS);
-            Xor(plaintext[i], ciphertext[i - 1], plaintext[i]);
-        }
-        else
-        {
-            if (last_block_size < BLOCK_SIZE)
-            {
-                decrypt_mode(ciphertext[i], plaintext[i], key[0], ROUNDS);
-                Xor(plaintext[i], ciphertext[i - 1], plaintext[i]);
-                Xor(plaintext[i], key[2], plaintext[i]);
-                Unpad(plaintext[i], last_block_size);
-            }
-            else
-            {
-                decrypt_mode(ciphertext[i], plaintext[i], key[0], ROUNDS);
-                Xor(plaintext[i], ciphertext[i - 1], plaintext[i]);
-                Xor(plaintext[i], key[1], plaintext[i]);
-            }
-        }
-    }
-}
-
-// Éú³ÉËæ»úĞòÁĞ²¢´æ´¢ÔÚÊı×éTÖĞ
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ²ï¿½ï¿½æ´¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Tï¿½ï¿½
 void generate_random_sequence(uint32_t T[][BLOCK_SIZE], int n) {
-    srand(time(NULL)); // Ê¹ÓÃµ±Ç°Ê±¼ä×÷ÎªÖÖ×Ó
+    srand(time(NULL)); // Ê¹ï¿½Ãµï¿½Ç°Ê±ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < BLOCK_SIZE; j++) {
-            T[i][j] = (uint32_t)(rand() % 256); // Éú³É0µ½255Ö®¼äµÄËæ»úÊı
+            T[i][j] = (uint32_t)(rand() % 256); // ï¿½ï¿½ï¿½ï¿½0ï¿½ï¿½255Ö®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         }
     }
 }
 
-//¼ÆÊıÆ÷Ä£Ê½
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½
 void CTR_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint32_t T[][BLOCK_SIZE], int numBlocks, int last_block_size)
 {
     uint32_t output[BLOCK_SIZE];
     for (int i = 0; i < numBlocks; i++)
     {
-        encrypt_mode(T[i], output, key, ROUNDS);
+        sm4_encrypt_block(T[i], output, key);
         if (i == numBlocks - 1)
         {
             for (int j = 0; j < last_block_size; j++)
@@ -306,7 +216,7 @@ void CTR_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_S
     uint32_t output[BLOCK_SIZE];
     for (int i = 0; i < numBlocks; i++)
     {
-        encrypt_mode(T[i], output, key, ROUNDS);
+        sm4_encrypt_block(T[i], output, key);
         if (i == numBlocks - 1)
         {
             for (int j = 0; j < last_block_size; j++)
