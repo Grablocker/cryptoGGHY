@@ -1,6 +1,5 @@
 #include "./workPattern.h"
 
-
 void Xor(uint32_t* a, uint32_t* b, uint32_t* result) {
     for (int i = 0; i < BLOCK_SIZE; i++) {
         result[i] = a[i] ^ b[i];
