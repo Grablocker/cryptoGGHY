@@ -22,9 +22,15 @@ void ECB_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_S
 }
 
 // PCBCģʽ����
-void PCBC_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint32_t* iv, int numBlocks) {
+void PCBC_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, int numBlocks) {
     uint32_t preMidXor[BLOCK_SIZE];  // ǰһ�����������������Ľ��
     uint32_t temp[BLOCK_SIZE];  //��ʱ�洢����
+
+    uint32_t iv[4]={0, 0, 0, 0};
+    // use key to fill IV
+    for(int i=0; i<4;++i){
+        iv[i] = key[4 * i] | key[4 * i + 1] | key[4 * i + 2] | key[4 * i + 3];
+    }
 
     memcpy(temp, plaintext[0], BLOCK_SIZE);
     Xor(temp, iv, temp);
@@ -40,8 +46,14 @@ void PCBC_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_
 }
 
 //PCBC模式解密
-void PCBC_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t* key, uint32_t* iv, int numBlocks) {
+void PCBC_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t* key, int numBlocks) {
     uint32_t preMidXor[BLOCK_SIZE];  // 前一个密文与其明文异或的结果
+
+    uint32_t iv[4]={0, 0, 0, 0};
+    // use key to fill IV
+    for(int i=0; i<4;++i){
+        iv[i] = key[4 * i] | key[4 * i + 1] | key[4 * i + 2] | key[4 * i + 3];
+    }
 
     sm4_decrypt_block(ciphertext[0], plaintext[0], key);
     Xor(plaintext[0], iv, plaintext[0]);
@@ -55,7 +67,13 @@ void PCBC_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_
 }
 
 // CBC模式加密
-void CBC_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint32_t* iv, int numBlocks) {
+void CBC_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, int numBlocks) {
+    uint32_t iv[4]={0, 0, 0, 0};
+    // use key to fill IV
+    for(int i=0; i<4;++i){
+        iv[i] = key[4 * i] | key[4 * i + 1] | key[4 * i + 2] | key[4 * i + 3];
+    }
+
     Xor(plaintext[0], iv, plaintext[0]);
     sm4_encrypt_block(plaintext[0], ciphertext[0], key);
 
@@ -66,7 +84,13 @@ void CBC_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_S
 }
 
 // CBC模式解密
-void CBC_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t* key, uint32_t* iv, int numBlocks) {
+void CBC_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t* key, int numBlocks) {
+    uint32_t iv[4]={0, 0, 0, 0};
+    // use key to fill IV
+    for(int i=0; i<4;++i){
+        iv[i] = key[4 * i] | key[4 * i + 1] | key[4 * i + 2] | key[4 * i + 3];
+    }
+    
     sm4_decrypt_block(ciphertext[0], plaintext[0], key);
     Xor(plaintext[0], iv, plaintext[0]);
 

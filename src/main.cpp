@@ -15,7 +15,7 @@ int main(){
 
     uint32_t ciphertext[4][4]={};
 
-    ECB_encrypt(plaintext, ciphertext, key, 4);
+    PCBC_encrypt(plaintext, ciphertext, key, 4);
 
     for(int i=0; i<4; ++i){
         u32_output(ciphertext[i], BLOCK_SIZE);
