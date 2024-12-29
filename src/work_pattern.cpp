@@ -102,8 +102,14 @@ void CBC_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_S
 
 
 //输出反馈模式OFB
-void OFB_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint32_t* R0, int s, int numBlocks)
+void OFB_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, int s, int numBlocks)
 {
+    uint32_t R0[4]={0, 0, 0, 0};
+    // use key to fill IV
+    for(int i=0; i<4;++i){
+        R0[i] = key[4 * i] | key[4 * i + 1] | key[4 * i + 2] | key[4 * i + 3];
+    }
+
     uint32_t reg[BLOCK_SIZE];
     uint32_t mid_cipher[BLOCK_SIZE];
     int num = s / 8;
@@ -127,8 +133,14 @@ void OFB_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_S
     }
 }
 
-void OFB_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t* key, uint32_t* R0, int s, int numBlocks)
+void OFB_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t* key, int s, int numBlocks)
 {
+    uint32_t R0[4]={0, 0, 0, 0};
+    // use key to fill IV
+    for(int i=0; i<4;++i){
+        R0[i] = key[4 * i] | key[4 * i + 1] | key[4 * i + 2] | key[4 * i + 3];
+    }
+
     uint32_t reg[BLOCK_SIZE];
     uint32_t mid_plain[BLOCK_SIZE];
     int num = s / 8;
@@ -153,8 +165,14 @@ void OFB_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_S
 }
 
 //密文反馈模式CFB
-void CFB_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, uint32_t* R0, int s, int numBlocks)
+void CFB_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, int s, int numBlocks)
 {
+    uint32_t R0[4]={0, 0, 0, 0};
+    // use key to fill IV
+    for(int i=0; i<4;++i){
+        R0[i] = key[4 * i] | key[4 * i + 1] | key[4 * i + 2] | key[4 * i + 3];
+    }
+
     uint32_t reg[BLOCK_SIZE];
     uint32_t mid_cipher[BLOCK_SIZE];
     int num = s / 8;
@@ -178,8 +196,14 @@ void CFB_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_S
     }
 }
 
-void CFB_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t* key, uint32_t* R0, int s, int numBlocks)
+void CFB_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t* key, int s, int numBlocks)
 {
+    uint32_t R0[4]={0, 0, 0, 0};
+    // use key to fill IV
+    for(int i=0; i<4;++i){
+        R0[i] = key[4 * i] | key[4 * i + 1] | key[4 * i + 2] | key[4 * i + 3];
+    }
+
     uint32_t reg[BLOCK_SIZE];
     uint32_t mid_plain[BLOCK_SIZE];
     int num = s / 8;
