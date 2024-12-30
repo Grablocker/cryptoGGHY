@@ -36,14 +36,44 @@ app.on("activate", () => {
 
 ipcMain.on(
   "process-encryption",
-  (event, mode, fileContent, operationMode, paddingMode, keyLength) => {
+  (event, mode, fileContent, operationMode, paddingMode,key) => {
     console.log("mode: ", mode);
     let result;
+    const { exec } = require("child_process");
+    const exepath = path.join( process.resourcesPath,'/app/main.exe' );
+    
     if (mode === "encrypt") {
-      result = `Encrypted: ${fileContent}\nMode: ${operationMode}\nPadding: ${paddingMode}\nKey Length: ${keyLength}`;
+      //result = `Encrypted: ${fileContent}\nMode: ${operationMode}\nPadding: ${paddingMode}\nKey Length: ${keyLength}`;
+      console.log("fileContent: ", fileContent);
+      const params = [exepath,0,operationMode,fileContent,key]; 
+      exec(params.join(" "), (error, stdout, stderr) => {
+        if (error) {
+          console.error(`执行的错误: ${error}`);
+          return;
+        }
+        console.log(`${stdout}`);
+        result = stdout;
+        if (stderr) {
+          console.log(`标准错误输出：${stderr}`);
+        }
+        event.reply("process-result", result);
+      });
     } else {
-      result = `Decrypted: ${fileContent}\nMode: ${operationMode}\nPadding: ${paddingMode}\nKey Length: ${keyLength}`;
+      console.log("fileContent: ", fileContent);
+      const params = [exepath, 1, operationMode, fileContent, key]; 
+      exec(params.join(" "), (error, stdout, stderr) => {
+        if (error) {
+          console.error(`执行的错误: ${error}`);
+          return;
+        }
+        console.log(`${stdout}`);
+        result = stdout;
+        if (stderr) {
+          console.log(`标准错误输出：${stderr}`);
+        }
+        event.reply("process-result", result);
+      });
     }
-    event.reply("process-result", result);
+    
   }
 );
