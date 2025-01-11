@@ -16,15 +16,14 @@ void ECB_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_S
 // ECBģʽ����
 void ECB_decrypt(uint32_t ciphertext[][BLOCK_SIZE], uint32_t plaintext[][BLOCK_SIZE], uint8_t* key, int numBlocks) {
     for (int i = 0; i < numBlocks; i++) {
-        // ������ECBģʽ�����ܺͽ��ܹ�����ͬ��ֱ�ӵ���AES��������
         sm4_decrypt_block(ciphertext[i], plaintext[i], key);
     }
 }
 
-// PCBCģʽ����
+// PCBC
 void PCBC_encrypt(uint32_t plaintext[][BLOCK_SIZE], uint32_t ciphertext[][BLOCK_SIZE], uint8_t* key, int numBlocks) {
-    uint32_t preMidXor[BLOCK_SIZE];  // ǰһ�����������������Ľ��
-    uint32_t temp[BLOCK_SIZE];  //��ʱ�洢����
+    uint32_t preMidXor[BLOCK_SIZE];  
+    uint32_t temp[BLOCK_SIZE];  
 
     uint32_t iv[4]={0, 0, 0, 0};
     // use key to fill IV

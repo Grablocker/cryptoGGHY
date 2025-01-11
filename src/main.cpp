@@ -63,6 +63,23 @@ int main(int argc, char *argv[])
     // printf("Debug Info: Parsing input\n");
     // printf("%s\n", argv[3]);
 
+    argv[3]=PKCS7Padding(argv[3]);
+
+    // int plaintext_len=strlen(argv[3]);
+    // char key_arr[32];   memcpy(key_arr, argv[4], 32*sizeof(char));
+    
+    // int padding_len= 32-(plaintext_len%32);
+    // char* padding_str= (char*)malloc((padding_len+1)*sizeof(char));
+    
+    // for(int i=0;i<padding_len; ++i){
+    //     padding_str[i]='0';
+    // }
+    // padding_str[padding_len]='\0';
+
+    // argv[3]=strncat(argv[3], padding_str, (padding_len+1));
+
+
+
     if(usage_choice == _ENCRYPT_){
         parse_hex_to_uint32_array(argv[3], plaintext, 4);
     }
@@ -170,3 +187,4 @@ int main(int argc, char *argv[])
 //plaintext: 0123456789abcdeffedcba9876543210
 //key: 
 // cipher:  681edf34d206965e86b3e94f536e4246
+
