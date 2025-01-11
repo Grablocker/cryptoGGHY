@@ -104,28 +104,28 @@ int main(int argc, char *argv[])
         {
         case _ECB_MODE_:
             //_ENTER("Debug Info: Executing ECB Decrypt\n");
-            ECB_decrypt(ciphertext, plaintext, key, 4);
+            ECB_decrypt(plaintext, ciphertext, key, 4);
             break;
         case _PCBC_MODE_:
             //_ENTER("Debug Info: Executing PCBC Decrypt\n");
-            PCBC_decrypt(ciphertext, plaintext, key, 4);
+            PCBC_decrypt(plaintext, ciphertext, key, 4);
             break;
         case _CBC_MODE_:
             //_ENTER("Debug Info: Executing CBC Decrypt\n");
-            CBC_decrypt(ciphertext, plaintext, key, 4);
+            CBC_decrypt(plaintext, ciphertext, key, 4);
             break;
         case _OFB_MODE_:
             //_ENTER("Debug Info: Executing OFB Decrypt\n");
-            OFB_decrypt(ciphertext, plaintext, key, 128, 4);
+            OFB_decrypt(plaintext, ciphertext, key, 128, 4);
             break;
         case _CFB_MODE_:
             //_ENTER("Debug Info: Executing CFB Decrypt\n");
-            CFB_decrypt(ciphertext, plaintext, key, 128, 4);
+            CFB_decrypt(plaintext, ciphertext, key, 128, 4);
             break;
         case _CTR_MODE_:
             //_ENTER("Debug Info: Executing CTR Decrypt\n");
             generate_random_sequence(T, 4);
-            CTR_decrypt(ciphertext, plaintext, key, T, 4, 4);
+            CTR_decrypt(plaintext, ciphertext, key, T, 4, 4);
             break;
         default:
             //_ENTER("Invalid work pattern.\n");

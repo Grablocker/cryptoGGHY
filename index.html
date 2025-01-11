@@ -7,19 +7,40 @@
     <style>
       body {
         font-family: Arial, sans-serif;
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        margin: 0;
         height: 100vh;
         background-color: #e0f7fa;
-        margin: 0;
+      }
+      .main-layout {
+        display: flex;
+        width: 100%;
+      }
+      .sidebar {
+        width: 250px;
+        background-color: #ffffff;
+        padding: 20px;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        position: fixed;
+        height: 100vh;
+        left: -250px;
+        transition: left 0.3s ease-in-out;
+        z-index: 100;
+      }
+      .sidebar.visible {
+        left: 0;
       }
       .container {
+        margin-left: 0;
+        transition: margin 0.3s ease-in-out;
+        width: 350px;
         background-color: #ffffff;
         padding: 30px;
         border-radius: 10px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        width: 350px;
+        margin: auto;
+      }
+      .container.with-sidebar {
+        margin-left: 250px;
       }
       .container h2 {
         text-align: center;
@@ -46,39 +67,129 @@
       .container button:hover {
         background-color: #004d40;
       }
+      .sidebar h3 {
+        color: #00796b;
+        margin-bottom: 15px;
+      }
+      #historyList {
+        max-height: calc(100vh - 150px);
+        overflow-y: auto;
+      }
+      .history-item {
+        padding: 8px;
+        margin-bottom: 5px;
+        background-color: #f5f5f5;
+        border-radius: 4px;
+        font-size: 0.9em;
+      }
+      #toggleHistoryBtn {
+        width: 100%;
+        margin-bottom: 15px;
+        padding: 8px;
+        background-color: #00796b;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .toast {
+        visibility: hidden;
+        min-width: 250px;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 2px;
+        padding: 16px;
+        position: fixed;
+        z-index: 1;
+        right: 30px;
+        bottom: 30px;
+        font-size: 17px;
+      }
+      .toast.show {
+        visibility: visible;
+        -webkit-animation: slidein 0.5s, fadeout 0.5s 2.5s;
+        animation: slidein 0.5s, fadeout 0.5s 2.5s;
+      }
+      @-webkit-keyframes slidein {
+        from {
+          right: -300px;
+          opacity: 0;
+        }
+        to {
+          right: 30px;
+          opacity: 1;
+        }
+      }
+      @keyframes slidein {
+        from {
+          right: -300px;
+          opacity: 0;
+        }
+        to {
+          right: 30px;
+          opacity: 1;
+        }
+      }
+      @-webkit-keyframes fadeout {
+        from {
+          opacity: 1;
+        }
+        to {
+          opacity: 0;
+        }
+      }
+      @keyframes fadeout {
+        from {
+          opacity: 1;
+        }
+        to {
+          opacity: 0;
+        }
+      }
     </style>
   </head>
   <body>
-    <div class="container">
-      <h2>SM4 Encryption/Decryption</h2>
-      <select id="mode">
-        <option value="encrypt">Encrypt</option>
-        <option value="decrypt">Decrypt</option>
-      </select>
-      <select id="operationMode">
-        <option value="0">ECB</option>
-        <option value="1">PCBC</option>
-        <option value="2">CBC</option>
-        <option value="3">CFB</option>
-        <option value="4">OFB</option>
-        <option value="5">CTR</option>
-      </select>
-      <select id="paddingMode">
-        <option value="PKCS5Padding">PKCS5Padding</option>
-        <option value="NoPadding">NoPadding</option>
-      </select>
-      <input type="text" id="key" placeholder="Enter key here..." />
-      <textarea id="input" rows="4" placeholder="Enter text here..."></textarea>
-      <input type="file" id="fileInput" onchange="toggleInput()" />
-      <textarea
-        id="output"
-        rows="4"
-        placeholder="Output will appear here..."
-        readonly
-      ></textarea>
-      <button onclick="process()">Process</button>
-      <button onclick="saveToFile()">Save to File</button>
+    <div class="main-layout">
+      <div class="sidebar visible">
+        <h3>History</h3>
+        <button onclick="toggleHistory()" id="toggleHistoryBtn">Hide History</button>
+        <div id="historyList"></div>
+      </div>
+      <div class="container">
+        <h2>SM4 Encryption/Decryption</h2>
+        <div id="executionTime" style="text-align: center; margin-bottom: 15px; color: #00796b; font-weight: bold;"></div>
+        <select id="mode">
+          <option value="encrypt">Encrypt</option>
+          <option value="decrypt">Decrypt</option>
+        </select>
+        <select id="operationMode">
+          <option value="0">ECB</option>
+          <option value="1">PCBC</option>
+          <option value="2">CBC</option>
+          <option value="3">CFB</option>
+          <option value="4">OFB</option>
+          <option value="5">CTR</option>
+        </select>
+        <select id="paddingMode">
+          <option value="PKCS5Padding">PKCS5Padding</option>
+          <option value="NoPadding">NoPadding</option>
+        </select>
+        <input type="text" id="key" placeholder="Enter key here..." />
+        <textarea id="input" rows="4" placeholder="Enter text here..."></textarea>
+        <input type="file" id="fileInput" onchange="toggleInput()" />
+        <textarea
+          id="output"
+          rows="4"
+          placeholder="Output will appear here..."
+          readonly
+        ></textarea>
+        <button onclick="process()">Process</button>
+        <button onclick="saveToFile()">Save to File</button>
+      </div>
     </div>
+
+    <div id="toast" class="toast">Encryption/Decryption Completed</div>
 
     <script>
       const { ipcRenderer } = window.electron;
@@ -106,14 +217,12 @@
           const reader = new FileReader();
           reader.readAsArrayBuffer(fileInput);
           reader.onload = function (e) {
-            // 将ArrayBuffer转换为16进制字符串
             const arrayBuffer = e.target.result;
             const uint8Array = new Uint8Array(arrayBuffer);
             const hexString = uint8Array.reduce(
               (str, byte) => str + byte.toString(16).padStart(2, "0"),
               ""
             );
-            console.log(hexString);
             ipcRenderer.send(
               "process-encryption",
               mode,
@@ -133,10 +242,6 @@
             key
           );
         }
-
-        ipcRenderer.on("process-result", (event, result) => {
-          output.value = result;
-        });
       }
 
       function saveToFile() {
@@ -157,6 +262,53 @@
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       }
+
+      function showToast() {
+        const toast = document.getElementById("toast");
+        toast.className = "toast show";
+        setTimeout(() => {
+          toast.className = toast.className.replace("show", "");
+        }, 3000);
+      }
+
+      let historyVisible = true;
+      const history = [];
+
+      function toggleHistory() {
+        const sidebar = document.querySelector('.sidebar');
+        const container = document.querySelector('.container');
+        const btn = document.getElementById('toggleHistoryBtn');
+        historyVisible = !historyVisible;
+        sidebar.classList.toggle('visible', historyVisible);
+        container.classList.toggle('with-sidebar', historyVisible);
+        btn.textContent = historyVisible ? 'Hide History' : 'Show History';
+      }
+
+      function addHistoryEntry(mode, time) {
+        const entry = document.createElement('div');
+        entry.className = 'history-item';
+        entry.textContent = `${mode} - ${time.toFixed(2)}s`;
+        history.push({mode, time});
+        document.getElementById('historyList').prepend(entry);
+        
+        if (history.length > 50) {
+          history.shift();
+          const lastChild = document.getElementById('historyList').lastChild;
+          if (lastChild) {
+            lastChild.remove();
+          }
+        }
+      }
+
+      ipcRenderer.on("process-result", (event, {result, executionTime}) => {
+        const output = document.getElementById("output");
+        output.value = result;
+        const mode = document.getElementById("mode").value;
+        document.getElementById("executionTime").textContent = 
+          `Execution time: ${executionTime.toFixed(2)} seconds`;
+        addHistoryEntry(mode, executionTime);
+        showToast();
+      });
     </script>
   </body>
 </html>

@@ -36,44 +36,55 @@ app.on("activate", () => {
 
 ipcMain.on(
   "process-encryption",
-  (event, mode, fileContent, operationMode, paddingMode,key) => {
+  (event, mode, fileContent, operationMode, paddingMode, key) => {
+    fileContent = fileContent.replace(/[^0-9a-fA-F]/g, "");
     console.log("mode: ", mode);
     let result;
     const { exec } = require("child_process");
-    const exepath = path.join( process.resourcesPath,'/app/main.exe' );
-    
+    const fs = require("fs");
+    let exepath = path.join(process.resourcesPath, "/app/main.exe");
+    if (!fs.existsSync(exepath)) {
+      console.log("exepath not exist: ", exepath);
+      exepath = ".\\main.exe";
+    }
+
     if (mode === "encrypt") {
       //result = `Encrypted: ${fileContent}\nMode: ${operationMode}\nPadding: ${paddingMode}\nKey Length: ${keyLength}`;
-      console.log("fileContent: ", fileContent);
-      const params = [exepath,0,operationMode,fileContent,key]; 
+      const params = [exepath, 0, operationMode, fileContent, key];
+      console.log("params: ", params);
+      const startTime = Date.now();
       exec(params.join(" "), (error, stdout, stderr) => {
         if (error) {
-          console.error(`执行的错误: ${error}`);
+          console.error(`error when executive: ${error}`);
           return;
         }
         console.log(`${stdout}`);
         result = stdout;
         if (stderr) {
-          console.log(`标准错误输出：${stderr}`);
+          console.log(`standard error output：${stderr}`);
         }
-        event.reply("process-result", result);
+        const endTime = Date.now();
+        const executionTime = (endTime - startTime) / 1000;
+        event.reply("process-result", { result, executionTime });
       });
     } else {
-      console.log("fileContent: ", fileContent);
-      const params = [exepath, 1, operationMode, fileContent, key]; 
+      const params = [exepath, 1, operationMode, fileContent, key];
+      console.log("params: ", params);
+      const startTime = Date.now();
       exec(params.join(" "), (error, stdout, stderr) => {
         if (error) {
-          console.error(`执行的错误: ${error}`);
+          console.error(`error when executive: ${error}`);
           return;
         }
         console.log(`${stdout}`);
         result = stdout;
         if (stderr) {
-          console.log(`标准错误输出：${stderr}`);
+          console.log(`standard error output${stderr}`);
         }
-        event.reply("process-result", result);
+        const endTime = Date.now();
+        const executionTime = (endTime - startTime) / 1000;
+        event.reply("process-result", { result, executionTime });
       });
     }
-    
   }
 );
